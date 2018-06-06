@@ -1,3 +1,4 @@
+``` sh
 yekaideMacBook-Pro:pdjtoken yk$ cleos push action  yekai create '["yekai","100000.000 PTK",86400,"ptk"]' -pyekai
 executed transaction: 0a97f2f10232bb88cb9cc38636a13f879004e535152087372097c13b482e16a5  128 bytes  558 us
 #         yekai <= yekai::create                {"issuer":"yekai","maximum_supply":"100000.000 PTK","days":86400,"prekey":"ptk"}
@@ -55,3 +56,4 @@ yekaideMacBook-Pro:pdjtoken yk$ cleos get table yekai yekai attrs
   "more": false
 }
 
+``` 
