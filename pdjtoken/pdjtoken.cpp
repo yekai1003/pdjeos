@@ -1,4 +1,5 @@
 #include "pdjtoken.hpp"
+#include <eosiolib/types.hpp>
 
 
 void pdjtoken::sub_balance( account_name owner, asset value, const stat& st ) {
@@ -37,7 +38,8 @@ void pdjtoken::add_balance( account_name owner, asset value, const stat& st, acc
 
 void pdjtoken::create( account_name issuer,
                     asset        maximum_supply, 
-                    uint64_t days )
+                    uint64_t days,
+                    string prekey )
 {
     require_auth( _self );
 
@@ -55,7 +57,7 @@ void pdjtoken::create( account_name issuer,
        s.max_supply    = maximum_supply;
        s.issuer        = issuer;
        s.lockduration  = time_point_sec(days * 86400) ;
-
+       s.attrPrefix    = prekey;
     });
 }
 
@@ -111,33 +113,50 @@ void pdjtoken::transfer( account_name from,
  
 }
 
+//根据代币符号去查找前缀key值，自动生成attrkey
+void pdjtoken::addattr( asset sym, string key, string val )
+{  
 
-void pdjtoken::addattr( string sym, string key, uint64_t val )
-{
+   stats st( _self, _self );
+   auto &sy = st.get( sym.symbol.name() );
+
    attrs attr( _self, _self );
+
+   string attrkey = sy.attrPrefix + key;
+
+   
    //const auto& at = attr.get( N(sym) );
-   auto existing = attr.find( string_to_name(sym.c_str()) );
- 
-   if ( existing == attr.end() ){
-       //需要初始化
-       attr.emplace( _self,[&]( auto& s ){
-          s.sym = sym;
-          attrdata data;
-          data.key = key;
-          data.val = val;
-          s.vattr.push_back(data);
-      });
-   }
-   else {
-       //直接追加即可
-       auto &at = *existing;
-       attr.modify( at, _self, [&](auto & a){
-           attrdata data;
-           data.key = key;
-           data.val = val;
-           a.vattr.push_back(data);
-       } );
-   }
+   //name{_self};
+   auto existing = attr.find( string_to_name(attrkey.c_str()) );
+   eosio_assert( existing == attr.end() , "this key already exists!" );
+
+   print(N(sym+key),",",N(sym),",",sym,string_to_name(attrkey.c_str()),"---",string_to_name(key.c_str()));
+   attr.emplace( current_receiver(),[&]( auto& s ){
+          s.attrkey = attrkey ;
+          s.val = val ;
+          s.attrPrefix = sy.attrPrefix ;
+   });
+
+//    if ( existing == attr.end() ){
+//        //需要初始化
+//        attr.emplace( _self,[&]( auto& s ){
+//           s.sym = sym;
+//           attrdata data;
+//           data.key = key;
+//           data.val = val;
+//           s.vattr.push_back(data);
+//       });
+//    }
+//    else {
+//        //直接追加即可
+//        auto &at = *existing;
+//        attr.modify( at, _self, [&](auto & a){
+//            attrdata data;
+//            data.key = key;
+//            data.val = val;
+//            a.vattr.push_back(data);
+//        } );
+//    }
    //eosio_assert( existing != attr.end(), "sym data not find!" );
 }
 

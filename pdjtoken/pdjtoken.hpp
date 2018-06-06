@@ -3,7 +3,7 @@
 #include <eosiolib/asset.hpp>
 #include <eosiolib/eosio.hpp>
 #include <eosiolib/time.hpp>
-#include <map>
+
 //#include "pdjtoken.hpp"
 
 #include <string>
@@ -13,7 +13,6 @@ using namespace eosio ;
 const uint32_t attrsize = 7;
 
 using std::string;
-using std::map;
 
 class pdjtoken : public contract {
     public:
@@ -21,7 +20,8 @@ class pdjtoken : public contract {
     /// @abi action
         void create( account_name issuer,
                     asset        maximum_supply, 
-                    uint64_t days );
+                    uint64_t days,
+                    string prekey );
 
 
         void issue( account_name to, asset quantity, string memo );
@@ -30,7 +30,7 @@ class pdjtoken : public contract {
                     account_name to,
                     asset        quantity,
                     string       memo );
-        void addattr( string sym, string key, uint64_t val );
+        void addattr( asset sym, string key, string val );
     private:
 
         //friend pdjtask;
@@ -51,18 +51,22 @@ class pdjtoken : public contract {
             asset          max_supply;
             account_name   issuer;
             time_point_sec lockduration;
-
+            string attrPrefix;//用于查找币对应的属性信息
             uint64_t primary_key()const { return supply.symbol.name(); }
+            uint64_t get_prekey() const { return string_to_name(attrPrefix.c_str()); }
         };
-        struct attrdata {
-            string  key;
-            uint64_t val;
-        };
+        // struct attrdata {
+        //     string  key;
+        //     uint64_t val;
+        // };
         /// @abi table attrs i64
          struct attribute {
-            vector<attrdata>  vattr;
-            string  sym;
-            uint64_t primary_key()const { return string_to_name(sym.c_str()); }
+            string attrkey;//不能超过12个长度，针对不同币采用不同前缀，范围 1-5,a-z
+            string val;
+            //vector<attrdata>  vattr;
+            string  attrPrefix;
+            uint64_t primary_key()const { return string_to_name(attrkey.c_str()); }
+            //uint64_t get_prekey() const { return string_to_name(attrPrefix.c_str()); }
          };
         typedef eosio::multi_index<N(accounts), account> accounts;
         typedef eosio::multi_index<N(stats), stat> stats;
